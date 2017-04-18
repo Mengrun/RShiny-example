@@ -1,3 +1,67 @@
+###Task 1 Getting data from forecast.io  
+####Description  
+#####Input: key, latitude, longtitude  
+#####Output: data frame of the hourly weather forecast information of selected location
+
+if(!("stringr" %in% installed.packages())) {
+  install.packages("stringr", repos = "http://cran.us.r-project.org")
+}
+if(!("XML" %in% installed.packages())) {
+  install.packages("XML", repos = "http://cran.us.r-project.org")
+}
+if(!("xml2" %in% installed.packages())) {
+  install.packages("xml2", repos = "http://cran.us.r-project.org")
+}
+if(!("magrittr" %in% installed.packages())) {
+  install.packages("magrittr", repos = "http://cran.us.r-project.org")
+}
+if(!("rvest" %in% installed.packages())) {
+  install.packages("rvest", repos = "http://cran.us.r-project.org")
+}
+if(!("httr" %in% installed.packages())) {
+  install.packages("httr", repos = "http://cran.us.r-project.org")
+}
+
+library("stringr")
+library("XML")
+library("xml2")
+library("magrittr")
+library("rvest")
+library("httr")
+
+key = "2ac3029a8c835c47abfe4ef01d1dd349"
+
+get_weather_locs = function(key, lat, long)
+{
+  url = paste0(
+    "https://api.forecast.io/forecast/",key,"/",lat,",",long
+  )
+  #subset the hourly data from url xml node to get a list
+  a = GET(url)
+  b = content(a)$hourly
+  c = b$data
+  summary = b$summary
+  icon = b$icon
+  name = unique(names(unlist(c)))
+  #generate a data frame to store all the data
+  #the number of columns is the maximum number among data of each hour
+  data = as.data.frame(matrix(NA, ncol = length(name), nrow = length(c)))
+  colnames(data) = name
+  #fill the data frame
+  for(i in 1:length(c)){
+    for(j in 1: length(name)){
+      if(name[[j]] %in% names(c[[i]]))
+        data[i,j] = c[[i]][[name[[j]]]]
+    }
+  }
+  #convert the unix time into EST date and time
+  data$time = as.POSIXct(data$time, origin = "1970-01-01") 
+  return(data)
+}
+
+
+
+
 if(!("maps" %in% installed.packages())) {
   install.packages("maps", repos = "http://cran.us.r-project.org")
 }
